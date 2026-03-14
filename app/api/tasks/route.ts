@@ -1,19 +1,18 @@
 import { NextRequest } from 'next/server'
 import connectDB from '@/lib/db'
 import { encryptTaskDescription, decryptTaskDescription } from '@/lib/encryption'
-import { createTaskSchema, taskQuerySchema } from '@/lib/validation'
+import { createTaskSchema, taskQuerySchema, TaskQueryInput } from '@/lib/validation'
 import {
   successResponse,
   paginatedResponse,
-  errorResponse,
   validationErrorResponse,
   unauthorizedResponse,
   serverErrorResponse,
 } from '@/lib/response'
 import { ZodError } from 'zod'
-import mongoose from 'mongoose'
 import Task from '@/models/Task'
 import { getUserFromRequest } from '@/lib/auth'
+import mongoose from 'mongoose'
 
 // GET /api/tasks - List tasks with pagination, filtering, search
 export async function GET(req: NextRequest) {
@@ -35,7 +34,7 @@ export async function GET(req: NextRequest) {
       sortOrder: searchParams.get('sortOrder') || 'desc',
     }
 
-    let query: typeof rawQuery
+    let query: TaskQueryInput
     try {
       query = taskQuerySchema.parse(rawQuery)
     } catch (error) {
@@ -46,14 +45,14 @@ export async function GET(req: NextRequest) {
     const { page, limit, status, priority, search, sortBy, sortOrder } = query
 
     // Build MongoDB filter
-    const filter: mongoose.FilterQuery<typeof Task> = {
+    const filter: Record<string, unknown> = {
       userId: new mongoose.Types.ObjectId(user.userId),
     }
 
     if (status !== 'all') filter.status = status
     if (priority !== 'all') filter.priority = priority
 
-    // Search by title (case-insensitive regex - safe, no SQL injection risk)
+    // Search by title (case-insensitive regex)
     if (search.trim()) {
       filter.title = { $regex: search.trim(), $options: 'i' }
     }
@@ -61,7 +60,7 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit
     const sortDirection = sortOrder === 'asc' ? 1 : -1
 
-    // Execute query and count in parallel for efficiency
+    // Execute query and count in parallel
     const [tasks, total] = await Promise.all([
       Task.find(filter)
         .sort({ [sortBy]: sortDirection })

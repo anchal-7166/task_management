@@ -61,7 +61,7 @@ const taskSchema = new Schema<ITask>(
   {
     timestamps: true,
     toJSON: {
-      transform: function (_, ret) {
+      transform: function (_, ret:any) {
         delete ret.__v
         return ret
       },
