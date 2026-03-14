@@ -4,7 +4,7 @@ A production-ready task management application built with **Next.js 14**, **Mong
 
 ---
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 ```
 taskflow/
@@ -70,23 +70,20 @@ taskflow/
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/YOUR_USERNAME/taskflow.git
-cd taskflow
+git clone https://github.com/anchal-7166/task_management.git
+cd task_management
 
 # 2. Install dependencies
 npm install
 
 # 3. Set up environment variables
-cp .env.example .env.local
+cp  .env.local
 # Edit .env.local with your values
 
 # 4. Run in development
 npm run dev
 # App is at http://localhost:3000
 
-# 5. Build for production
-npm run build
-npm start
 ```
 
 ### Environment Variables
@@ -100,42 +97,6 @@ NODE_ENV=development
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
----
-
-## ☁️ Deployment (Vercel)
-
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel
-
-# Set production env vars
-vercel env add MONGODB_URI
-vercel env add JWT_SECRET
-vercel env add ENCRYPTION_KEY
-```
-
-Or connect your GitHub repo in the Vercel dashboard for automatic deploys.
-
----
-
-## 📡 API Documentation
-
-All responses follow this structure:
-```json
-{
-  "success": true | false,
-  "message": "Human readable message",
-  "data": { ... },
-  "error": "Error message (on failure)",
-  "errors": { "field": ["message"] },
-  "pagination": { ... }
-}
-```
-
----
 
 ### Auth Endpoints
 
@@ -287,11 +248,6 @@ _id, title, description (AES-256 encrypted), status (indexed), priority (indexed
 userId (indexed, ref: User), dueDate, createdAt, updatedAt
 ```
 
-**Compound indexes:**
-- `{ userId: 1, status: 1, createdAt: -1 }` — fast filtered list queries
-- `{ userId: 1, createdAt: -1 }` — fast per-user listing
-- `{ userId: 1, title: 'text' }` — title search
-
 ---
 
 ## 🧪 Tech Stack
@@ -307,4 +263,3 @@ userId (indexed, ref: User), dueDate, createdAt, updatedAt
 | Validation | Zod |
 | Styling | Tailwind CSS |
 | HTTP Client | Axios |
-| Deployment | Vercel |
