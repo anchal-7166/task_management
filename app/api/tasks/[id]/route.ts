@@ -16,22 +16,24 @@ import Task from '@/models/Task'
 import { getUserFromRequest } from '@/lib/auth'
 
 interface RouteParams {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 // GET /api/tasks/[id]
 export async function GET(req: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params
+
     const user = getUserFromRequest(req)
     if (!user) return unauthorizedResponse()
 
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return notFoundResponse('Task not found')
     }
 
     await connectDB()
 
-    const task = await Task.findById(params.id).lean()
+    const task = await Task.findById(id).lean()
     if (!task) return notFoundResponse('Task not found')
 
     // Authorization: users can only access their own tasks
@@ -41,7 +43,9 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
     return successResponse({
       ...task,
-      description: task.description ? decryptTaskDescription(task.description) : '',
+      description: task.description
+        ? decryptTaskDescription(task.description)
+        : '',
     })
   } catch (error) {
     console.error('[TASK_GET_ERROR]', error)
@@ -52,16 +56,18 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 // PUT /api/tasks/[id]
 export async function PUT(req: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params
+
     const user = getUserFromRequest(req)
     if (!user) return unauthorizedResponse()
 
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return notFoundResponse('Task not found')
     }
 
     await connectDB()
 
-    const task = await Task.findById(params.id)
+    const task = await Task.findById(id)
     if (!task) return notFoundResponse('Task not found')
 
     if (task.userId.toString() !== user.userId) {
@@ -88,18 +94,24 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
     // Encrypt description if updated
     if (description !== undefined) {
-      task.description = description ? encryptTaskDescription(description) : ''
+      task.description = description
+        ? encryptTaskDescription(description)
+        : ''
     }
 
     await task.save()
 
     const taskObj = task.toJSON()
+
     return successResponse(
       {
         ...taskObj,
-        description: description !== undefined
-          ? description
-          : (task.description ? decryptTaskDescription(task.description) : ''),
+        description:
+          description !== undefined
+            ? description
+            : task.description
+            ? decryptTaskDescription(task.description)
+            : '',
       },
       'Task updated successfully'
     )
@@ -112,16 +124,18 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 // DELETE /api/tasks/[id]
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   try {
+    const { id } = await params
+
     const user = getUserFromRequest(req)
     if (!user) return unauthorizedResponse()
 
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return notFoundResponse('Task not found')
     }
 
     await connectDB()
 
-    const task = await Task.findById(params.id)
+    const task = await Task.findById(id)
     if (!task) return notFoundResponse('Task not found')
 
     if (task.userId.toString() !== user.userId) {
