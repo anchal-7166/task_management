@@ -1,36 +1,310 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TaskFlow — Full Stack Task Management Application
 
-## Getting Started
+A production-ready task management application built with **Next.js 14**, **MongoDB**, **Tailwind CSS**, and **TypeScript**.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🏗️ Architecture Overview
+
+```
+taskflow/
+├── app/
+│   ├── (auth)/                  # Auth route group (login, register)
+│   ├── api/
+│   │   ├── auth/                # JWT auth endpoints
+│   │   │   ├── register/route.ts
+│   │   │   ├── login/route.ts
+│   │   │   ├── logout/route.ts
+│   │   │   └── me/route.ts
+│   │   └── tasks/               # Task CRUD endpoints
+│   │       ├── route.ts         # GET (list) + POST (create)
+│   │       └── [id]/route.ts    # GET, PUT, DELETE by ID
+│   ├── dashboard/               # Protected pages
+│   │   ├── layout.tsx           # Sidebar layout
+│   │   ├── page.tsx             # Overview with stats
+│   │   ├── tasks/page.tsx       # Task list with filters
+│   │   └── new/page.tsx         # Create task form
+│   ├── layout.tsx               # Root layout
+│   ├── page.tsx                 # Landing page
+│   └── globals.css
+├── components/
+│   ├── auth/AuthProvider.tsx    # React Context for auth state
+│   └── tasks/                   # TaskCard, TaskModal
+├── hooks/useTasks.ts            # Task data + CRUD hook
+├── lib/
+│   ├── auth.ts                  # JWT sign/verify + cookie utils
+│   ├── db.ts                    # MongoDB connection (singleton)
+│   ├── encryption.ts            # AES-256 encrypt/decrypt
+│   ├── response.ts              # Structured API response helpers
+│   └── validations.ts           # Zod schemas
+├── middleware.ts                # Route protection
+└── models/
+    ├── User.ts                  # Mongoose User model
+    └── Task.ts                  # Mongoose Task model
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛡️ Security Implementation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Feature | Implementation |
+|---|---|
+| Password hashing | `bcryptjs` with 12 salt rounds |
+| Authentication | JWT stored in **HTTP-only cookies** (not localStorage) |
+| Cookie flags | `HttpOnly`, `Secure` (in production), `SameSite=lax` |
+| Payload encryption | Task descriptions encrypted with **AES-256** via `crypto-js` |
+| Input validation | Zod schemas on every endpoint |
+| Authorization | All task endpoints verify `userId === token.userId` |
+| Injection prevention | Mongoose ODM parameterizes all queries; regex search is escaped |
+| Env variables | All secrets in `.env.local`, never hardcoded |
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🚀 Local Setup
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Prerequisites
+- Node.js 18+
+- MongoDB Atlas account (free tier works)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Steps
 
-## Deploy on Vercel
+```bash
+# 1. Clone the repo
+git clone https://github.com/YOUR_USERNAME/taskflow.git
+cd taskflow
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# 2. Install dependencies
+npm install
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# 3. Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your values
+
+# 4. Run in development
+npm run dev
+# App is at http://localhost:3000
+
+# 5. Build for production
+npm run build
+npm start
+```
+
+### Environment Variables
+
+```env
+MONGODB_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/taskflow
+JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters
+JWT_EXPIRES_IN=7d
+ENCRYPTION_KEY=your-32-character-encryption-key!!
+NODE_ENV=development
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+---
+
+## ☁️ Deployment (Vercel)
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+
+# Set production env vars
+vercel env add MONGODB_URI
+vercel env add JWT_SECRET
+vercel env add ENCRYPTION_KEY
+```
+
+Or connect your GitHub repo in the Vercel dashboard for automatic deploys.
+
+---
+
+## 📡 API Documentation
+
+All responses follow this structure:
+```json
+{
+  "success": true | false,
+  "message": "Human readable message",
+  "data": { ... },
+  "error": "Error message (on failure)",
+  "errors": { "field": ["message"] },
+  "pagination": { ... }
+}
+```
+
+---
+
+### Auth Endpoints
+
+#### POST `/api/auth/register`
+```json
+// Request
+{
+  "name": "Jane Smith",
+  "email": "jane@example.com",
+  "password": "SecurePass1"
+}
+
+// Response 201
+{
+  "success": true,
+  "message": "Account created successfully",
+  "data": {
+    "user": {
+      "id": "664abc123...",
+      "name": "Jane Smith",
+      "email": "jane@example.com",
+      "createdAt": "2024-06-01T10:00:00.000Z"
+    }
+  }
+}
+```
+
+#### POST `/api/auth/login`
+```json
+// Request
+{ "email": "jane@example.com", "password": "SecurePass1" }
+
+// Response 200
+{
+  "success": true,
+  "message": "Login successful",
+  "data": { "user": { ... } }
+}
+// Sets auth_token cookie (HTTP-only)
+```
+
+#### POST `/api/auth/logout`
+```json
+// Response 200
+{ "success": true, "message": "Logged out successfully", "data": null }
+// Clears auth_token cookie
+```
+
+#### GET `/api/auth/me`
+```json
+// Response 200 (requires auth cookie)
+{
+  "success": true,
+  "data": { "user": { "id": "...", "name": "...", "email": "..." } }
+}
+```
+
+---
+
+### Task Endpoints (all require auth)
+
+#### GET `/api/tasks`
+
+Query params: `page`, `limit`, `status`, `priority`, `search`, `sortBy`, `sortOrder`
+
+```
+GET /api/tasks?page=1&limit=10&status=todo&search=meeting&sortBy=createdAt&sortOrder=desc
+```
+
+```json
+// Response 200
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "664abc...",
+      "title": "Team meeting prep",
+      "description": "Prepare agenda and slides",
+      "status": "todo",
+      "priority": "high",
+      "dueDate": "2024-06-10T00:00:00.000Z",
+      "userId": "664def...",
+      "createdAt": "2024-06-01T10:00:00.000Z",
+      "updatedAt": "2024-06-01T10:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 24,
+    "totalPages": 3,
+    "hasNextPage": true,
+    "hasPrevPage": false
+  }
+}
+```
+
+#### POST `/api/tasks`
+```json
+// Request
+{
+  "title": "Review PR",
+  "description": "Check the authentication PR on GitHub",
+  "status": "todo",
+  "priority": "high",
+  "dueDate": "2024-06-15T00:00:00.000Z"
+}
+
+// Response 201
+{ "success": true, "message": "Task created successfully", "data": { "_id": "...", ... } }
+```
+
+#### GET `/api/tasks/:id`
+```json
+// Response 200
+{ "success": true, "data": { "_id": "...", "title": "...", ... } }
+
+// Error 403 (accessing another user's task)
+{ "success": false, "error": "You do not have access to this task" }
+```
+
+#### PUT `/api/tasks/:id`
+```json
+// Request (all fields optional)
+{ "status": "done", "priority": "low" }
+
+// Response 200
+{ "success": true, "message": "Task updated successfully", "data": { ... } }
+```
+
+#### DELETE `/api/tasks/:id`
+```json
+// Response 200
+{ "success": true, "message": "Task deleted successfully", "data": null }
+```
+
+---
+
+## 🗄️ Database Design
+
+### User Collection
+```
+_id, name, email (indexed, unique), password (bcrypt, hidden), createdAt, updatedAt
+```
+
+### Task Collection
+```
+_id, title, description (AES-256 encrypted), status (indexed), priority (indexed),
+userId (indexed, ref: User), dueDate, createdAt, updatedAt
+```
+
+**Compound indexes:**
+- `{ userId: 1, status: 1, createdAt: -1 }` — fast filtered list queries
+- `{ userId: 1, createdAt: -1 }` — fast per-user listing
+- `{ userId: 1, title: 'text' }` — title search
+
+---
+
+## 🧪 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 14 (App Router) |
+| Language | TypeScript |
+| Database | MongoDB + Mongoose |
+| Auth | JWT + HTTP-only cookies |
+| Encryption | AES-256 (crypto-js) |
+| Password hashing | bcryptjs (12 rounds) |
+| Validation | Zod |
+| Styling | Tailwind CSS |
+| HTTP Client | Axios |
+| Deployment | Vercel |

@@ -1,26 +1,260 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-ink-950: #0f0f0c;
+  --color-ink-900: #141412;
+  --color-ink-800: #1e1e18;
+  --color-ink-700: #32322a;
+  --color-ink-600: #4a4a3e;
+  --color-ink-500: #6b6b5e;
+  --color-ink-400: #a1a199;
+  --color-ink-300: #cfcfc7;
+  --color-ink-200: #e8e8e0;
+  --color-ink-100: #f5f5ef;
+
+  --color-jade-400: #4ade80;
+  --color-jade-500: #22c55e;
+
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+
+  --color-rose-400: #fb7185;
+  --color-rose-500: #f43f5e;
+
+  --font-display: 'Fraunces', serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ── Custom utilities (Tailwind v4 syntax) ── */
+@utility font-display {
+  font-family: var(--font-display);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@utility font-body {
+  font-family: var(--font-body);
+}
+
+@utility font-mono {
+  font-family: var(--font-mono);
+}
+
+@utility glass {
+  background: rgba(30, 30, 24, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(50, 50, 42, 0.6);
+}
+
+@utility bg-grid {
+  background-image:
+    linear-gradient(rgba(50, 50, 42, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(50, 50, 42, 0.3) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+@utility text-gradient {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@utility shimmer {
+  background: linear-gradient(90deg, #1e1e18 0%, #32322a 50%, #1e1e18 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@utility input-base {
+  width: 100%;
+  background-color: var(--color-ink-800);
+  border: 1px solid var(--color-ink-700);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  color: var(--color-ink-100);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  &::placeholder { color: var(--color-ink-500); }
+  &:focus {
+    outline: none;
+    border-color: var(--color-amber-500);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-amber-500) 20%, transparent);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@utility btn-primary {
+  background-color: var(--color-amber-500);
+  color: var(--color-ink-950);
+  font-weight: 500;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  &:hover { background-color: var(--color-amber-400); }
+  &:active { transform: scale(0.95); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 }
+
+@utility btn-secondary {
+  background-color: var(--color-ink-800);
+  color: var(--color-ink-200);
+  border: 1px solid var(--color-ink-700);
+  font-weight: 500;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  &:hover { background-color: var(--color-ink-700); }
+  &:active { transform: scale(0.95); }
+}
+
+@utility btn-ghost {
+  color: var(--color-ink-400);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  transition: all 0.2s;
+  &:hover { color: var(--color-ink-200); background-color: var(--color-ink-800); }
+}
+
+@utility btn-danger {
+  background-color: color-mix(in srgb, var(--color-rose-500) 10%, transparent);
+  color: var(--color-rose-400);
+  border: 1px solid color-mix(in srgb, var(--color-rose-500) 20%, transparent);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  &:hover { background-color: color-mix(in srgb, var(--color-rose-500) 20%, transparent); }
+  &:active { transform: scale(0.95); }
+}
+
+@utility badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+@utility badge-todo {
+  background-color: var(--color-ink-800);
+  color: var(--color-ink-300);
+  border: 1px solid var(--color-ink-700);
+}
+
+@utility badge-in-progress {
+  background-color: color-mix(in srgb, var(--color-amber-500) 15%, transparent);
+  color: var(--color-amber-400);
+  border: 1px solid color-mix(in srgb, var(--color-amber-500) 25%, transparent);
+}
+
+@utility badge-done {
+  background-color: color-mix(in srgb, var(--color-jade-500) 15%, transparent);
+  color: var(--color-jade-400);
+  border: 1px solid color-mix(in srgb, var(--color-jade-500) 25%, transparent);
+}
+
+@utility badge-low {
+  background-color: var(--color-ink-800);
+  color: var(--color-ink-400);
+  border: 1px solid var(--color-ink-700);
+}
+
+@utility badge-medium {
+  background-color: color-mix(in srgb, var(--color-amber-500) 10%, transparent);
+  color: var(--color-amber-500);
+  border: 1px solid color-mix(in srgb, var(--color-amber-500) 20%, transparent);
+}
+
+@utility badge-high {
+  background-color: color-mix(in srgb, var(--color-rose-500) 10%, transparent);
+  color: var(--color-rose-400);
+  border: 1px solid color-mix(in srgb, var(--color-rose-500) 20%, transparent);
+}
+
+@utility animate-slide-up {
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@utility animate-slide-down {
+  animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@utility animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@utility animate-scale-in {
+  animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@utility animate-spin {
+  animation: spin 0.7s linear infinite;
+}
+
+/* ── Base styles ── */
+@layer base {
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background-color: #0f0f0c;
+    color: #e8e8e0;
+    font-family: var(--font-body);
+  }
+  ::selection { background-color: #fbbf24; color: #0f0f0c; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #0f0f0c; }
+  ::-webkit-scrollbar-thumb { background: #32322a; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #4a4a3e; }
+  input[type='checkbox'] { accent-color: #f59e0b; }
+  select { background-color: var(--color-ink-800); color: var(--color-ink-100); }
+}
+
+/* ── Keyframes ── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes slideUp {
+  0% { transform: translateY(12px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes slideDown {
+  0% { transform: translateY(-12px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes scaleIn {
+  0% { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* noise pseudo-element */
+.noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: inherit;
+}
+.noise { position: relative; }
